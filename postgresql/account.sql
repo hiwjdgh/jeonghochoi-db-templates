@@ -1,34 +1,30 @@
 CREATE SCHEMA IF NOT EXISTS account;
 
-BEGIN;
-CREATE TABLE account.accounts (
+CREATE TABLE IF NOT EXISTS account.accounts (
     id UUID DEFAULT uuidv7() NOT NULL,
-    _hash TEXT NOT NULL,
-    _salt TEXT NOT NULL,
+    _type VARCHAR(50) NOT NULL, 
     _status VARCHAR(50) NOT NULL,
     LIKE core.base_entity INCLUDING COMMENTS,
     PRIMARY KEY (id)
 );
 
-CREATE INDEX ix_account_created_at
+CREATE INDEX IF NOT EXISTS ix_account_created_at
 ON account.accounts(_created_at DESC);
 
-CREATE INDEX ix_users_status
+CREATE INDEX IF NOT EXISTS ix_accounts_status
 ON account.accounts (_status);
 
 
 COMMENT ON TABLE account.accounts IS '계정 테이블';
 
 COMMENT ON COLUMN account.accounts.id IS '계정 테이블 PK';
-COMMENT ON COLUMN account.accounts._hash IS '비밀번호 해시';
-COMMENT ON COLUMN account.accounts._salt IS '비밀번호 솔트';
-COMMENT ON COLUMN account.accounts._status IS '계정 상태, core.codes - USER_STATUS';
-COMMIT;
+COMMENT ON COLUMN account.accounts._type IS '계정 구분, core.codes - ACCOUNT_TYPE';
+COMMENT ON COLUMN account.accounts._status IS '계정 상태, core.codes - ACCOUNT_STATUS';
+
 ------------------------------------------------------------
-BEGIN;
-CREATE TABLE account.account_oauths (
+CREATE TABLE IF NOT EXISTS account.account_oauths (
     id UUID DEFAULT uuidv7() NOT NULL,
-    user_id UUID NOT NULL,
+    account_id UUID NOT NULL,
     _provider VARCHAR(50) NOT NULL,
     _access_token TEXT NOT NULL,
     _refresh_token TEXT NOT NULL,
@@ -36,7 +32,7 @@ CREATE TABLE account.account_oauths (
     LIKE core.base_entity INCLUDING COMMENTS,
     PRIMARY KEY (id),
 
-    FOREIGN KEY (user_id)
+    FOREIGN KEY (account_id)
     REFERENCES account.accounts(id)
     ON DELETE CASCADE
 );
@@ -44,136 +40,134 @@ CREATE TABLE account.account_oauths (
 COMMENT ON TABLE account.account_oauths IS '계정 OAuth 테이블';
 
 COMMENT ON COLUMN account.account_oauths.id IS '계정 OAuth 테이블 PK';
-COMMENT ON COLUMN account.account_oauths.user_id IS '계정 테이블 FK';
+COMMENT ON COLUMN account.account_oauths.account_id IS '계정 테이블 FK';
 COMMENT ON COLUMN account.account_oauths._provider IS 'OAuth 제공처, core.codes - OAUTH_PROVIDER';
 COMMENT ON COLUMN account.account_oauths._access_token IS '엑세스 토큰';
 COMMENT ON COLUMN account.account_oauths._refresh_token IS '리프레시 토큰';
 COMMENT ON COLUMN account.account_oauths._expired_at IS '만료일자';
-COMMIT;
+
+
 ------------------------------------------------------------
 
+CREATE TABLE IF NOT EXISTS account.account_profiles (
+    id UUID DEFAULT uuidv7() NOT NULL,
+    account_id UUID NOT NULL,
 
-/* \
-profile.user_profiles (프로필 N)
-CREATE TABLE profile.user_profiles (
-    id           UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-    user_id      UUID NOT NULL,
-    profile_type VARCHAR(30) NOT NULL,
-    nickname     VARCHAR(100),
-    avatar_url   TEXT,
-    bio          TEXT,
-    extra        JSONB DEFAULT '{}'::jsonb,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    alias VARCHAR(100),
 
-    UNIQUE (user_id, profile_type),
+    _nickname     VARCHAR(100),
+    _avatar_url   TEXT,
+    _timezone   VARCHAR(50) DEFAULT 'Asia/Seoul',
+    _language VARCHAR(20) DEFAULT 'ko',
+    LIKE core.base_entity INCLUDING COMMENTS,
+    PRIMARY KEY (id),
+    UNIQUE (alias),
 
-    FOREIGN KEY (user_id)
-        REFERENCES auth.users(id)
-        ON DELETE CASCADE
-);
-JSONB 인덱스
-CREATE INDEX ix_profiles_extra
-ON profile.user_profiles
-USING GIN (extra);
-4️⃣ private.user_privacies (개인정보 1)
-
-민감정보 분리
-
-CREATE TABLE private.user_privacies (
-    user_id      UUID PRIMARY KEY,
-    real_name    VARCHAR(100),
-    phone_number VARCHAR(30),
-    birth_date   DATE,
-    ci_hash      TEXT,
-    address      TEXT,
-    created_at   TIMESTAMPTZ DEFAULT now(),
-
-    FOREIGN KEY (user_id)
-        REFERENCES auth.users(id)
-        ON DELETE CASCADE
+    FOREIGN KEY (account_id)
+    REFERENCES account.accounts(id)
+    ON DELETE CASCADE
 );
 
-👉 실무에선 암호화 권장 (pgcrypto)
 
-5️⃣ billing.user_payment_methods (결제수단 N)
-CREATE TABLE billing.user_payment_methods (
-    id          UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-    user_id     UUID NOT NULL,
-    method_type VARCHAR(20) NOT NULL, -- card, bank
-    pg_provider VARCHAR(50) NOT NULL,
-    token       TEXT NOT NULL,
-    is_default  BOOLEAN DEFAULT false,
-    expires_at  DATE,
-    created_at  TIMESTAMPTZ DEFAULT now(),
+COMMENT ON TABLE account.account_profiles IS '계정 프로필 테이블';
 
-    FOREIGN KEY (user_id)
-        REFERENCES auth.users(id)
-        ON DELETE CASCADE
+COMMENT ON COLUMN account.account_profiles.id IS '계정 프로필 테이블 PK';
+COMMENT ON COLUMN account.account_profiles.account_id IS '계정 테이블 FK';
+COMMENT ON COLUMN account.account_profiles.alias IS '별칭';
+COMMENT ON COLUMN account.account_profiles._nickname IS '닉네임';
+COMMENT ON COLUMN account.account_profiles._avatar_url IS '프로필 이미지 URL';
+COMMENT ON COLUMN account.account_profiles._timezone IS '타임존';
+COMMENT ON COLUMN account.account_profiles._language IS '언어';
+
+
+
+------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS account.account_devices (
+    id UUID DEFAULT uuidv7() NOT NULL,
+    account_id UUID NOT NULL,
+
+    _device_type         VARCHAR(50) NOT NULL, 
+    _device_os_version   VARCHAR(50),
+    _app_version         VARCHAR(50),
+
+    _push_token          TEXT,
+    _push_provider       VARCHAR(50),          
+
+    _is_active           BOOLEAN NOT NULL DEFAULT true,
+    _is_push_enabled     BOOLEAN NOT NULL DEFAULT true,
+
+    _last_login_at       TIMESTAMPTZ,
+
+    LIKE core.base_entity INCLUDING COMMENTS,
+    PRIMARY KEY (id),
+
+    FOREIGN KEY (account_id)
+    REFERENCES account.accounts(id)
+    ON DELETE CASCADE
 );
-인덱스
-CREATE INDEX ix_payment_user
-ON billing.user_payment_methods (user_id);
 
-CREATE INDEX ix_payment_default
-ON billing.user_payment_methods (user_id)
-WHERE is_default = true;
-6️⃣ auth.roles
-CREATE TABLE auth.roles (
-    id          UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-    name        VARCHAR(50) NOT NULL UNIQUE,
-    description TEXT,
-    is_system   BOOLEAN NOT NULL DEFAULT false,
-    created_at  TIMESTAMPTZ DEFAULT now()
+
+COMMENT ON TABLE account.account_devices IS '계정 프로필 테이블';
+
+COMMENT ON COLUMN account.account_devices.id IS '계정 프로필 테이블 PK';
+COMMENT ON COLUMN account.account_devices.account_id IS '계정 테이블 FK';
+COMMENT ON COLUMN account.account_devices._device_type IS '기기 구분, core.codes - DEVICE_TYPE';
+COMMENT ON COLUMN account.account_devices._device_os_version IS '기기 OS 버전';
+COMMENT ON COLUMN account.account_devices._app_version IS '기기 앱 버전';
+COMMENT ON COLUMN account.account_devices._push_token IS '푸시 토큰';
+COMMENT ON COLUMN account.account_devices._push_provider IS '푸시 구분, core.codes - PUSH_PROVIDER';
+COMMENT ON COLUMN account.account_devices._is_active IS '활성 디바이스 여부, 1: 예 0: 아니요';
+COMMENT ON COLUMN account.account_devices._is_push_enabled IS '푸시 활성 여부, 1:예 0: 아니요';
+COMMENT ON COLUMN account.account_devices._last_login_at IS '마지막 로그인일자';
+
+
+CREATE INDEX IF NOT EXISTS ix_account_devices_account
+ON account.account_devices (account_id);
+
+CREATE INDEX IF NOT EXISTS ix_account_devices_push
+ON account.account_devices (_push_token)
+WHERE _push_token IS NOT NULL;
+
+
+------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS account.corporations (
+    id UUID DEFAULT uuidv7(),
+    application_id UUID NOT NULL,
+
+    LIKE core.base_entity INCLUDING COMMENTS,
+
+    PRIMARY KEY (id),
+
+    FOREIGN KEY (application_id)
+    REFERENCES private.corporation_applications(id)
+    ON DELETE RESTRICT
 );
-7️⃣ auth.permissions
-CREATE TABLE auth.permissions (
-    id          UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-    code        VARCHAR(100) NOT NULL UNIQUE,
-    description TEXT,
-    created_at  TIMESTAMPTZ DEFAULT now()
+
+COMMENT ON TABLE account.corporations IS '승인된 법인 테이블';
+
+COMMENT ON COLUMN account.corporations.id IS '승인된 법인 테이블 PK';
+COMMENT ON COLUMN account.corporations.application_id IS '법인 가입신청 테이블 PK';
+
+------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS account.corporation_members (
+    account_id UUID NOT NULL,
+    corporation_id UUID NOT NULL,
+
+    PRIMARY KEY (account_id, corporation_id),
+
+    FOREIGN KEY (account_id)
+    REFERENCES account.accounts(id)
+    ON DELETE RESTRICT,
+
+    FOREIGN KEY (corporation_id)
+    REFERENCES account.corporations(id)
+    ON DELETE RESTRICT
 );
-8️⃣ auth.user_roles (N:M)
-CREATE TABLE auth.user_roles (
-    user_id    UUID NOT NULL,
-    role_id    UUID NOT NULL,
-    assigned_at TIMESTAMPTZ DEFAULT now(),
 
-    PRIMARY KEY (user_id, role_id),
+COMMENT ON TABLE account.corporation_members IS '승인된 법인직원 테이블';
 
-    FOREIGN KEY (user_id)
-        REFERENCES auth.users(id)
-        ON DELETE CASCADE,
-
-    FOREIGN KEY (role_id)
-        REFERENCES auth.roles(id)
-        ON DELETE CASCADE
-);
-CREATE INDEX ix_user_roles_role
-ON auth.user_roles (role_id);
-9️⃣ auth.role_permissions (N:M)
-CREATE TABLE auth.role_permissions (
-    role_id       UUID NOT NULL,
-    permission_id UUID NOT NULL,
-
-    PRIMARY KEY (role_id, permission_id),
-
-    FOREIGN KEY (role_id)
-        REFERENCES auth.roles(id)
-        ON DELETE CASCADE,
-
-    FOREIGN KEY (permission_id)
-        REFERENCES auth.permissions(id)
-        ON DELETE CASCADE
-);
-CREATE INDEX ix_role_permissions_permission
-ON auth.role_permissions (permission_id);
-🔥 권한 체크 핵심 쿼리
-SELECT 1
-FROM auth.user_roles ur
-JOIN auth.role_permissions rp ON ur.role_id = rp.role_id
-JOIN auth.permissions p ON rp.permission_id = p.id
-WHERE ur.user_id = $1
-AND p.code = 'BOARD_DELETE'
-LIMIT 1;
-
- */
+COMMENT ON COLUMN account.corporation_members.account_id IS '계정 테이블 FK';
+COMMENT ON COLUMN account.corporation_members.corporation_id IS '법인 테이블 FK';

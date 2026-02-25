@@ -1,7 +1,7 @@
 CREATE SCHEMA IF NOT EXISTS core;
 
-BEGIN;
-CREATE TABLE core.base_entity (
+
+CREATE TABLE IF NOT EXISTS core.base_entity (
     _created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     _updated_at TIMESTAMPTZ,
     _deleted_at TIMESTAMPTZ,
@@ -16,10 +16,10 @@ COMMENT ON COLUMN core.base_entity._deleted_at IS '삭제일자';
 COMMENT ON COLUMN core.base_entity._created_user IS '생성자';
 COMMENT ON COLUMN core.base_entity._updated_user IS '수정자';
 COMMENT ON COLUMN core.base_entity._deleted_user IS '삭제자';
-COMMIT;
+
 ------------------------------------------------------------
-BEGIN;
-CREATE TABLE core.code_groups (
+
+CREATE TABLE IF NOT EXISTS core.code_groups (
     group_code VARCHAR(50) NOT NULL,
     _is_active BOOLEAN NOT NULL DEFAULT true,
     LIKE core.base_entity INCLUDING COMMENTS,
@@ -32,12 +32,22 @@ COMMENT ON COLUMN core.code_groups.group_code IS '코드그룹 테이블 PK';
 COMMENT ON COLUMN core.code_groups._is_active IS '활성여부, 1: 예 0: 아니요';
 
 INSERT INTO core.code_groups VALUES
-('USER_STATUS', true, now(), null, null, 'superman', null, null),
-('OAUTH_PROVIDER', true, now(), null, null, 'superman', null, null);
-COMMIT;
+('ACCOUNT_STATUS', true, now(), null, null, 'superman', null, null),
+('OAUTH_PROVIDER', true, now(), null, null, 'superman', null, null),
+('DEVICE_TYPE', true, now(), null, null, 'superman', null, null),
+('PUSH_PROVIDER', true, now(), null, null, 'superman', null, null),
+('ACCOUNT_TYPE', true, now(), null, null, 'superman', null, null),
+('MENU_PLATFORM', true, now(), null, null, 'superman', null, null),
+('CORP_APPLICATION_STATUS', true, now(), null, null, 'superman', null, null),
+('ACCOUNT_GENDER', true, now(), null, null, 'superman', null, null),
+('BOARD_POST_STATUS', true, now(), null, null, 'superman', null, null),
+('BOARD_COMMENT_STATUS', true, now(), null, null, 'superman', null, null),
+('BOARD_POST_ATTACHMENT_STATUS', true, now(), null, null, 'superman', null, null),
+('BOARD_POST_REACTION', true, now(), null, null, 'superman', null, null)
+ON CONFLICT (group_code) DO NOTHING;
 ------------------------------------------------------------
-BEGIN;
-CREATE TABLE core.codes (
+
+CREATE TABLE IF NOT EXISTS core.codes (
     group_code VARCHAR(50) NOT NULL,
     code VARCHAR(50) NOT NULL,
     _sort_order INTEGER NOT NULL DEFAULT 0,
@@ -52,7 +62,7 @@ CREATE TABLE core.codes (
         ON DELETE CASCADE
 );
 
-CREATE INDEX ix_codes_group
+CREATE INDEX IF NOT EXISTS ix_codes_group
 ON core.codes (group_code, _is_active);
 
 COMMENT ON TABLE core.codes IS '코드 테이블';
@@ -63,14 +73,46 @@ COMMENT ON COLUMN core.codes._sort_order IS '정렬순서';
 COMMENT ON COLUMN core.codes._is_active IS '활성여부, 1: 예 0: 아니요';
 
 INSERT INTO core.codes VALUES
-('USER_STATUS', 'ACTIVE', 0, true, now(), null, null, 'superman', null, null),
-('USER_STATUS', 'INACTIVE', 0, true, now(), null, null, 'superman', null, null),
-('USER_STATUS', 'PENDING', 0, true, now(), null, null, 'superman', null, null),
-('USER_STATUS', 'SUSPENDED', 0, true, now(), null, null, 'superman', null, null),
-('USER_STATUS', 'WITHDRAWN', 0, true, now(), null, null, 'superman', null, null),
-('USER_STATUS', 'DELETED', 0, true, now(), null, null, 'superman', null, null),
-('USER_STATUS', 'DORMANT', 0, true, now(), null, null, 'superman', null, null),
-('OAUTH_PROVIDER', 'GOOGLE', 0, true, now(), null, null, 'superman', null, null);
+('ACCOUNT_STATUS', 'ACTIVE', 0, true, now(), null, null, 'superman', null, null),
+('ACCOUNT_STATUS', 'INACTIVE', 0, true, now(), null, null, 'superman', null, null),
+('ACCOUNT_STATUS', 'PENDING', 0, true, now(), null, null, 'superman', null, null),
+('ACCOUNT_STATUS', 'SUSPENDED', 0, true, now(), null, null, 'superman', null, null),
+('ACCOUNT_STATUS', 'WITHDRAWN', 0, true, now(), null, null, 'superman', null, null),
+('ACCOUNT_STATUS', 'DELETED', 0, true, now(), null, null, 'superman', null, null),
+('ACCOUNT_STATUS', 'DORMANT', 0, true, now(), null, null, 'superman', null, null),
+('OAUTH_PROVIDER', 'GOOGLE', 0, true, now(), null, null, 'superman', null, null),
+('DEVICE_TYPE', 'WEB', 0, true, now(), null, null, 'superman', null, null),
+('DEVICE_TYPE', 'ANDROID', 0, true, now(), null, null, 'superman', null, null),
+('DEVICE_TYPE', 'IOS', 0, true, now(), null, null, 'superman', null, null),
+('PUSH_PROVIDER', 'FCM', 0, true, now(), null, null, 'superman', null, null),
+('PUSH_PROVIDER', 'APNS', 0, true, now(), null, null, 'superman', null, null),
+('ACCOUNT_TYPE', 'MEMBER', 0, true, now(), null, null, 'superman', null, null),
+('ACCOUNT_TYPE', 'CORP', 0, true, now(), null, null, 'superman', null, null),
+('MENU_PLATFORM', 'WEB', 0, true, now(), null, null, 'superman', null, null),
+('MENU_PLATFORM', 'ANDROID', 0, true, now(), null, null, 'superman', null, null),
+('MENU_PLATFORM', 'IOS', 0, true, now(), null, null, 'superman', null, null),
+('MENU_PLATFORM', 'FLUTTER', 0, true, now(), null, null, 'superman', null, null),
+('MENU_PLATFORM', 'ADMIN', 0, true, now(), null, null, 'superman', null, null),
+('CORP_APPLICATION_STATUS', 'PENDING', 0, true, now(), null, null, 'superman', null, null),
+('CORP_APPLICATION_STATUS', 'APPROVED', 0, true, now(), null, null, 'superman', null, null),
+('CORP_APPLICATION_STATUS', 'REJECTED', 0, true, now(), null, null, 'superman', null, null),
+('ACCOUNT_GENDER', 'MALE', 0, true, now(), null, null, 'superman', null, null),
+('ACCOUNT_GENDER', 'FEMALE', 0, true, now(), null, null, 'superman', null, null),
+('BOARD_POST_STATUS', 'DRAFT', 0, true, now(), null, null, 'superman', null, null),
+('BOARD_POST_STATUS', 'PUBLISHED', 0, true, now(), null, null, 'superman', null, null),
+('BOARD_POST_STATUS', 'HIDDEN', 0, true, now(), null, null, 'superman', null, null),
+('BOARD_POST_STATUS', 'DELETED', 0, true, now(), null, null, 'superman', null, null),
+('BOARD_COMMENT_STATUS', 'PUBLISHED', 0, true, now(), null, null, 'superman', null, null),
+('BOARD_COMMENT_STATUS', 'HIDDEN', 0, true, now(), null, null, 'superman', null, null),
+('BOARD_COMMENT_STATUS', 'DELETED', 0, true, now(), null, null, 'superman', null, null),
+('BOARD_POST_ATTACHMENT_STATUS', 'ACTIVE', 0, true, now(), null, null, 'superman', null, null),
+('BOARD_POST_ATTACHMENT_STATUS', 'DELETED', 0, true, now(), null, null, 'superman', null, null),
+('BOARD_POST_REACTION', 'LIKE', 0, true, now(), null, null, 'superman', null, null),
+('BOARD_POST_REACTION', 'DISLIKE', 0, true, now(), null, null, 'superman', null, null),
+('BOARD_POST_REACTION', 'SHARE', 0, true, now(), null, null, 'superman', null, null)
+
+
+ON CONFLICT (group_code, code) DO NOTHING;
 
 /* 
 ACTIVE      활성	    정상 이용 가능
@@ -81,10 +123,10 @@ WITHDRAWN   탈퇴	    사용자 탈퇴 완료
 DELETED     삭제	    물리 삭제 또는 완전 비활성
 DORMANT     휴면	    장기 미접속 계정
  */
-COMMIT;
+
 ------------------------------------------------------------
-BEGIN;
-CREATE TABLE core.languages (
+
+CREATE TABLE IF NOT EXISTS core.languages (
     lang_code VARCHAR(10),   -- ko, en, ja
     _name VARCHAR(50) NOT NULL,
     _is_default BOOLEAN NOT NULL DEFAULT false,
@@ -104,11 +146,11 @@ COMMENT ON COLUMN core.languages._is_active IS '활성여부, 1: 예 0: 아니�
 
 INSERT INTO core.languages VALUES
 ('ko', '한국어', true, true, now(), null, null, 'superman', null, null),
-('en', 'English', false, true, now(), null, null, 'superman', null, null);
-COMMIT;
+('en', 'English', false, true, now(), null, null, 'superman', null, null)
+ON CONFLICT (lang_code) DO NOTHING;
 ------------------------------------------------------------
-BEGIN;
-CREATE TABLE core.i18n (
+
+CREATE TABLE IF NOT EXISTS core.i18n (
     message_key VARCHAR(200) NOT NULL,
     lang_code VARCHAR(10) NOT NULL,
 
@@ -131,37 +173,37 @@ COMMENT ON COLUMN core.i18n.lang_code IS '언어 테이블 FK';
 COMMENT ON COLUMN core.i18n.message IS '메세지';
 
 INSERT INTO core.i18n VALUES
-('CODE_GROUP.USER_STATUS.NAME', 'ko', '회원상태', now(), null, null, 'superman', null, null),
-('CODE_GROUP.USER_STATUS.DESCRIPTION', 'ko', '회원상태설명', now(), null, null, 'superman', null, null),
+('CODE_GROUP.ACCOUNT_STATUS.NAME', 'ko', '회원상태', now(), null, null, 'superman', null, null),
+('CODE_GROUP.ACCOUNT_STATUS.DESCRIPTION', 'ko', '회원상태설명', now(), null, null, 'superman', null, null),
 
-('CODE_GROUP.USER_STATUS.NAME', 'en', 'User Status', now(), null, null, 'superman', null, null),
-('CODE_GROUP.USER_STATUS.DESCRIPTION', 'en', 'User Description', now(), null, null, 'superman', null, null),
+('CODE_GROUP.ACCOUNT_STATUS.NAME', 'en', 'User Status', now(), null, null, 'superman', null, null),
+('CODE_GROUP.ACCOUNT_STATUS.DESCRIPTION', 'en', 'User Description', now(), null, null, 'superman', null, null),
 
-('CODE.USER_STATUS.ACTIVE', 'ko', '활성', now(), null, null, 'superman', null, null),
-('CODE.USER_STATUS.ACTIVE', 'en', 'Active', now(), null, null, 'superman', null, null),
-('CODE.USER_STATUS.INACTIVE', 'ko', '비활성', now(), null, null, 'superman', null, null),
-('CODE.USER_STATUS.INACTIVE', 'en', 'InActive', now(), null, null, 'superman', null, null),
-('CODE.USER_STATUS.PENDING', 'ko', '가입대기', now(), null, null, 'superman', null, null),
-('CODE.USER_STATUS.PENDING', 'en', 'Pending', now(), null, null, 'superman', null, null),
-('CODE.USER_STATUS.SUSPENDED', 'ko', '정지', now(), null, null, 'superman', null, null),
-('CODE.USER_STATUS.SUSPENDED', 'en', 'Suspended', now(), null, null, 'superman', null, null),
-('CODE.USER_STATUS.WITHDRAWN', 'ko', '탈퇴', now(), null, null, 'superman', null, null),
-('CODE.USER_STATUS.WITHDRAWN', 'en', 'Withdrawn', now(), null, null, 'superman', null, null),
-('CODE.USER_STATUS.DELETED', 'ko', '삭제', now(), null, null, 'superman', null, null),
-('CODE.USER_STATUS.DELETED', 'en', 'Deleted', now(), null, null, 'superman', null, null),
-('CODE.USER_STATUS.DORMANT', 'ko', '휴면', now(), null, null, 'superman', null, null),
-('CODE.USER_STATUS.DORMANT', 'en', 'Dormant', now(), null, null, 'superman', null, null),
-
+('CODE.ACCOUNT_STATUS.ACTIVE', 'ko', '활성', now(), null, null, 'superman', null, null),
+('CODE.ACCOUNT_STATUS.ACTIVE', 'en', 'Active', now(), null, null, 'superman', null, null),
+('CODE.ACCOUNT_STATUS.INACTIVE', 'ko', '비활성', now(), null, null, 'superman', null, null),
+('CODE.ACCOUNT_STATUS.INACTIVE', 'en', 'InActive', now(), null, null, 'superman', null, null),
+('CODE.ACCOUNT_STATUS.PENDING', 'ko', '가입대기', now(), null, null, 'superman', null, null),
+('CODE.ACCOUNT_STATUS.PENDING', 'en', 'Pending', now(), null, null, 'superman', null, null),
+('CODE.ACCOUNT_STATUS.SUSPENDED', 'ko', '정지', now(), null, null, 'superman', null, null),
+('CODE.ACCOUNT_STATUS.SUSPENDED', 'en', 'Suspended', now(), null, null, 'superman', null, null),
+('CODE.ACCOUNT_STATUS.WITHDRAWN', 'ko', '탈퇴', now(), null, null, 'superman', null, null),
+('CODE.ACCOUNT_STATUS.WITHDRAWN', 'en', 'Withdrawn', now(), null, null, 'superman', null, null),
+('CODE.ACCOUNT_STATUS.DELETED', 'ko', '삭제', now(), null, null, 'superman', null, null),
+('CODE.ACCOUNT_STATUS.DELETED', 'en', 'Deleted', now(), null, null, 'superman', null, null),
+('CODE.ACCOUNT_STATUS.DORMANT', 'ko', '휴면', now(), null, null, 'superman', null, null),
+('CODE.ACCOUNT_STATUS.DORMANT', 'en', 'Dormant', now(), null, null, 'superman', null, null),
 ('CODE.OAUTH_PROVIDER.GOOGLE', 'ko', '구글', now(), null, null, 'superman', null, null),
-('CODE.OAUTH_PROVIDER.GOOGLE', 'en', 'Google', now(), null, null, 'superman', null, null);
+('CODE.OAUTH_PROVIDER.GOOGLE', 'en', 'Google', now(), null, null, 'superman', null, null)
+ON CONFLICT (message_key,lang_code) DO NOTHING;
 
-COMMIT;
+
 
 /* 
 message_key 형식
 {DOMAIN}.{CATEGORY}.{IDENTIFIER}
 코드
-CODE.USER_STATUS.ACTIVE
+CODE.ACCOUNT_STATUS.ACTIVE
 CODE.OAUTH_PROVIDER.GOOGLE
 메뉴
 MENU.SIDEBAR.DASHBOARD
@@ -177,18 +219,3 @@ COMMON.BUTTON.SAVE
 COMMON.BUTTON.CANCEL
  */
 
-
-
-
-------------------------------------------------------------
-/* 
-  PRIMARY KEY (id, created_at)
-) PARTITION BY RANGE (created_at);
-PRIMARY KEY (user_id, role_id),
-FOREIGN KEY (user_id) REFERENCES auth.users(id),
-    FOREIGN KEY (role_id) REFERENCES auth.roles(id)
-
-
-    CREATE INDEX ix_posts_board_created
-ON public.posts(board_id, created_at DESC);
- */
