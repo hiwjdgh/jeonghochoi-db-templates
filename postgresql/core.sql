@@ -43,7 +43,10 @@ INSERT INTO core.code_groups VALUES
 ('BOARD_POST_STATUS', true, now(), null, null, 'superman', null, null),
 ('BOARD_COMMENT_STATUS', true, now(), null, null, 'superman', null, null),
 ('BOARD_POST_ATTACHMENT_STATUS', true, now(), null, null, 'superman', null, null),
-('BOARD_POST_REACTION', true, now(), null, null, 'superman', null, null)
+('BOARD_POST_REACTION', true, now(), null, null, 'superman', null, null),
+('COLLECT_API_SOURCE', true, now(), null, null, 'superman', null, null),
+('REALESTATE_TRANSACTION_ASSET_TYPE', true, now(), null, null, 'superman', null, null),
+('REALESTATE_TRANSACTION_TRADE_TYPE', true, now(), null, null, 'superman', null, null)
 ON CONFLICT (group_code) DO NOTHING;
 ------------------------------------------------------------
 
@@ -109,7 +112,30 @@ INSERT INTO core.codes VALUES
 ('BOARD_POST_ATTACHMENT_STATUS', 'DELETED', 0, true, now(), null, null, 'superman', null, null),
 ('BOARD_POST_REACTION', 'LIKE', 0, true, now(), null, null, 'superman', null, null),
 ('BOARD_POST_REACTION', 'DISLIKE', 0, true, now(), null, null, 'superman', null, null),
-('BOARD_POST_REACTION', 'SHARE', 0, true, now(), null, null, 'superman', null, null)
+('BOARD_POST_REACTION', 'SHARE', 0, true, now(), null, null, 'superman', null, null),
+('COLLECT_API_SOURCE', 'STANDARD_REGION', 0, true, now(), null, null, 'superman', null, null),
+('COLLECT_API_SOURCE', 'BUILDING_REGISTER', 0, true, now(), null, null, 'superman', null, null),
+('COLLECT_API_SOURCE', 'APARTMENT_SALE', 0, true, now(), null, null, 'superman', null, null),
+('COLLECT_API_SOURCE', 'APARTMENT_RENT', 0, true, now(), null, null, 'superman', null, null),
+('COLLECT_API_SOURCE', 'OFFICETEL_SALE', 0, true, now(), null, null, 'superman', null, null),
+('COLLECT_API_SOURCE', 'OFFICETEL_RENT', 0, true, now(), null, null, 'superman', null, null),
+('COLLECT_API_SOURCE', 'SH_SALE', 0, true, now(), null, null, 'superman', null, null),
+('COLLECT_API_SOURCE', 'SH_RENT', 0, true, now(), null, null, 'superman', null, null),
+('COLLECT_API_SOURCE', 'RH_SALE', 0, true, now(), null, null, 'superman', null, null),
+('COLLECT_API_SOURCE', 'RH_RENT', 0, true, now(), null, null, 'superman', null, null),
+('COLLECT_API_SOURCE', 'LAND_SALE', 0, true, now(), null, null, 'superman', null, null),
+('COLLECT_API_SOURCE', 'LAND_RENT', 0, true, now(), null, null, 'superman', null, null),
+('COLLECT_API_SOURCE', 'BUILDING_SALE', 0, true, now(), null, null, 'superman', null, null),
+('COLLECT_API_SOURCE', 'BUILDING_RENT', 0, true, now(), null, null, 'superman', null, null),
+('REALESTATE_TRANSACTION_ASSET_TYPE', 'APARTMENT', 0, true, now(), null, null, 'superman', null, null),
+('REALESTATE_TRANSACTION_ASSET_TYPE', 'OFFICETEL', 0, true, now(), null, null, 'superman', null, null),
+('REALESTATE_TRANSACTION_ASSET_TYPE', 'SH', 0, true, now(), null, null, 'superman', null, null),
+('REALESTATE_TRANSACTION_ASSET_TYPE', 'RH', 0, true, now(), null, null, 'superman', null, null),
+('REALESTATE_TRANSACTION_ASSET_TYPE', 'LAND', 0, true, now(), null, null, 'superman', null, null),
+('REALESTATE_TRANSACTION_ASSET_TYPE', 'BUILDING', 0, true, now(), null, null, 'superman', null, null),
+('REALESTATE_TRANSACTION_TRADE_TYPE', 'SALE', 0, true, now(), null, null, 'superman', null, null),
+('REALESTATE_TRANSACTION_TRADE_TYPE', 'JEONSE', 0, true, now(), null, null, 'superman', null, null),
+('REALESTATE_TRANSACTION_TRADE_TYPE', 'RENT', 0, true, now(), null, null, 'superman', null, null)
 
 
 ON CONFLICT (group_code, code) DO NOTHING;
